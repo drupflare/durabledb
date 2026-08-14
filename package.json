@@ -1,6 +1,6 @@
 {
 	"name": "@drupflare/durabledb",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"type": "module",
 	"description": "A codec that encodes the real platform limits of Cloudflare Durable Object SQLite: 100 bound parameters, a 50-byte LIKE pattern, and lossy integers above 2^53.",
 	"license": "MIT",
@@ -30,11 +30,11 @@
 		"prepare": "husky"
 	},
 	"dependencies": {
-		"@drupflare/cartridge": "^0.1.0"
+		"@drupflare/cartridge": "^0.1.2"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^5.20260811.1",
-		"@vitest/coverage-v8": "^4.1.0",
+		"@cloudflare/workers-types": "^5.20260814.1",
+		"@vitest/coverage-v8": "^4.1.10",
 		"husky": "^9.1.7",
 		"lint-staged": "^17.3.0",
 		"prettier": "^3.9.6",
@@ -42,7 +42,7 @@
 		"prettier-plugin-sh": "^0.19.0",
 		"typedoc": "^0.28.20",
 		"typescript": "^5.9.3",
-		"vitest": "^4.1.0"
+		"vitest": "^4.1.10"
 	},
 	"author": "Gregory Mitchell <me@gmitch215.xyz>",
 	"homepage": "https://github.com/drupflare/durabledb",
