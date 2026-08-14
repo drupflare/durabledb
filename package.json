@@ -1,0 +1,67 @@
+{
+	"name": "@drupflare/durabledb",
+	"version": "0.1.0",
+	"type": "module",
+	"description": "A codec that encodes the real platform limits of Cloudflare Durable Object SQLite: 100 bound parameters, a 50-byte LIKE pattern, and lossy integers above 2^53.",
+	"license": "MIT",
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts",
+		"./codec": "./src/codec.ts",
+		"./do-sqlite": "./src/do-sqlite.ts",
+		"./package.json": "./package.json"
+	},
+	"sideEffects": false,
+	"files": [
+		"src",
+		"LICENSE",
+		"README.md"
+	],
+	"scripts": {
+		"typecheck": "tsc -p tsconfig.json --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage",
+		"docs:build": "typedoc",
+		"docs:serve": "typedoc --watch",
+		"prettier": "prettier --write .",
+		"prettier:check": "prettier --check .",
+		"prepare": "husky"
+	},
+	"dependencies": {
+		"@drupflare/cartridge": "^0.1.0"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^5.20260811.1",
+		"@vitest/coverage-v8": "^4.1.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^17.3.0",
+		"prettier": "^3.9.6",
+		"prettier-plugin-organize-imports": "^4.3.0",
+		"prettier-plugin-sh": "^0.19.0",
+		"typedoc": "^0.28.20",
+		"typescript": "^5.9.3",
+		"vitest": "^4.1.0"
+	},
+	"author": "Gregory Mitchell <me@gmitch215.xyz>",
+	"homepage": "https://github.com/drupflare/durabledb",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/drupflare/durabledb.git"
+	},
+	"bugs": {
+		"url": "https://github.com/drupflare/durabledb/issues"
+	},
+	"keywords": [
+		"cloudflare",
+		"durable-objects",
+		"sqlite",
+		"sql",
+		"codec",
+		"workers"
+	],
+	"lint-staged": {
+		"*.{ts,js,mjs,css,md,json,jsonc}": "prettier --write"
+	}
+}
