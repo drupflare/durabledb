@@ -1,0 +1,325 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="./"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>@drupflare/durabledb - v0.1.0</title><meta name="description" content="Documentation for @drupflare/durabledb"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="assets/style.css"/><link rel="stylesheet" href="assets/highlight.css"/><script defer src="assets/main.js"></script><script async src="assets/icons.js" id="tsd-icons-script"></script><script async src="assets/search.js" id="tsd-search-script"></script><script async src="assets/navigation.js" id="tsd-nav-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="index.html" class="title">@drupflare/durabledb - v0.1.0</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<h1>@drupflare/durabledb - v0.1.0</h1></div>
+<div class="tsd-panel tsd-typography"><h1 id="🗄️-durabledb" class="tsd-anchor-link">🗄️ durabledb<a href="#🗄️-durabledb" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h1>
+<blockquote>
+<p>The real limits of Cloudflare Durable Object SQLite, encoded rather than documented</p>
+</blockquote>
+<p><a href="https://github.com/drupflare/durabledb/actions/workflows/build.yml"><img src="https://github.com/drupflare/durabledb/actions/workflows/build.yml/badge.svg" alt="Build"></a>
+<a href="https://github.com/drupflare/durabledb/actions/workflows/prettier.yml"><img src="https://github.com/drupflare/durabledb/actions/workflows/prettier.yml/badge.svg" alt="Prettier"></a>
+<a href="https://codecov.io/gh/drupflare/durabledb"><img src="https://codecov.io/gh/drupflare/durabledb/branch/master/graph/badge.svg" alt="codecov"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a></p>
+<p><strong>A <code>ctx.storage.sql</code> host and a value codec that encode what the platform actually does, not
+what SQLite documents.</strong> <code>ctx.storage.sql</code> caps a statement at <strong>100</strong> bound parameters where
+local PDO allows 32,766, refuses a <code>LIKE</code> pattern over <strong>50 bytes</strong>, has <strong>no named parameters
+at all</strong>, and reads integers above <strong>2^53</strong> lossily. Every one of those is a measured refusal
+from a deployed object, and every one has produced a defect that a local SQLite passed.</p>
+<hr>
+<h2 id="📋-table-of-contents" class="tsd-anchor-link">📋 Table of Contents<a href="#📋-table-of-contents" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<ul>
+<li><a href="#-why">Why</a></li>
+<li><a href="#-install">Install</a></li>
+<li><a href="#-limits">Limits</a></li>
+<li><a href="#-codec">Codec</a></li>
+<li><a href="#-bridge-contract">Bridge Contract</a></li>
+<li><a href="#-api">API</a></li>
+<li><a href="#-testing">Testing</a></li>
+<li><a href="#-related-repositories">Related Repositories</a></li>
+<li><a href="#-license">License</a></li>
+</ul>
+<hr>
+<h2 id="🎯-why" class="tsd-anchor-link">🎯 Why<a href="#🎯-why" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>A Durable Object's SQLite is a genuinely good home for a small database: strongly consistent,
+in the same isolate as the code, and synchronous to read so blocking callers compose with it.
+Then you write against it as though it were SQLite and it refuses things SQLite does not.</p>
+<p>The refusals are not documented as a set, they are not tunable, and each one fails in a
+different register — a thrown error for the parameter cap, a <strong>silently wrong number</strong> for a
+wide integer. A value that comes back wrong rather than erroring cannot be told apart from correct
+output until much later.</p>
+<p>So the limits live in code, as named constants and named refusals, with a test per limit.</p>
+<hr>
+<h2 id="📥-install" class="tsd-anchor-link">📥 Install<a href="#📥-install" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<pre><code class="sh"><span class="hl-0">bun</span><span class="hl-1"> </span><span class="hl-2">add</span><span class="hl-1"> </span><span class="hl-2">@drupflare/durabledb</span>
+</code><button type="button">Copy</button></pre>
+
+<p>Three entry points, and the split is not cosmetic:</p>
+<table>
+<thead>
+<tr>
+<th>Import</th>
+<th>Gives you</th>
+<th>Needs <code>@drupflare/cartridge</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@drupflare/durabledb</code></td>
+<td>everything below</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td><code>@drupflare/durabledb/codec</code></td>
+<td><code>encode</code>, <code>decode</code>, <code>codecGuard</code>, <code>PHP_CODEC</code></td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>@drupflare/durabledb/do-sqlite</code></td>
+<td><code>SiteDurableObject</code>, <code>toPositional</code>, <code>bindable</code></td>
+<td><strong>yes</strong></td>
+</tr>
+</tbody>
+</table>
+<p><code>src/do-sqlite.ts</code> imports <code>@drupflare/cartridge/gate</code> and <code>/mask</code>; <code>src/codec.ts</code> imports nothing at
+all, so a consumer that only needs the codec pays for no dependency. There is no deep import: the
+<code>exports</code> map is the whole surface, and <code>@drupflare/durabledb/src/codec.ts</code> is refused by the
+resolver.</p>
+<hr>
+<h2 id="🧱-limits" class="tsd-anchor-link">🧱 Limits<a href="#🧱-limits" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Each one broke something real. None is a conservative guess.</p>
+<table>
+<thead>
+<tr>
+<th>Limit</th>
+<th>Value</th>
+<th>What it broke</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bound parameters per statement</td>
+<td><strong>100</strong></td>
+<td>the cache write path; a cold <code>cache_discovery</code> set needed 574</td>
+</tr>
+<tr>
+<td><code>LIKE</code> / <code>GLOB</code> pattern length</td>
+<td><strong>50 bytes</strong></td>
+<td>binds <strong>plain <code>LIKE</code></strong>, not only <code>GLOB</code>, so it is invisible to a caller</td>
+</tr>
+<tr>
+<td>bytes per record</td>
+<td><strong>2,199,995</strong></td>
+<td>a heap snapshot row</td>
+</tr>
+<tr>
+<td>statement text</td>
+<td><strong>100,000 chars</strong></td>
+<td>a chunked DDL replay</td>
+</tr>
+<tr>
+<td>integer reads</td>
+<td><strong>lossy above 2^53</strong></td>
+<td>wrote <code>9007199254740993</code>, read back <code>9007199254740992</code></td>
+</tr>
+<tr>
+<td>named parameters</td>
+<td><strong>none exist</strong></td>
+<td>every Drupal query; <code>toPositional()</code> converts them</td>
+</tr>
+</tbody>
+</table>
+<p>Two carry a further consequence:</p>
+<p><strong>Writing a wide integer is exact; reading one is not.</strong> <code>ctx.storage.sql</code> hands INTEGER columns
+back as JS doubles, so the precision is gone before any consumer can see it. <code>CAST(col AS TEXT)</code>
+returns every digit, so the storage is fine — the loss is in the cursor. <code>UnreadableIntegerError</code>
+exists to make that a refusal rather than a wrong answer.</p>
+<p><strong>&quot;There is no smaller unit than a row&quot; is false</strong>, and it was this project's own unverified
+claim, believed for a while. Three 520 KB rows each overran the record cap and looked
+indivisible; SQLite builds a value across statements with <code>col = col || ?</code>.</p>
+<div class="tsd-alert tsd-alert-warning"><div class="tsd-alert-title"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><use href="assets/icons.svg#icon-alertWarning"></use></svg><span>Warning</span></div><p>
+<strong>Never widen a limit because a test passes.</strong> These came from a deployed object, and a local
+SQLite will happily accept all of them. If you think one is wrong, re-measure on a deployed
+worker and say so. Do not relax a guard.</p>
+</div>
+<hr>
+<h2 id="🔁-codec" class="tsd-anchor-link">🔁 Codec<a href="#🔁-codec" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>The consumer runtime is a <strong>32-bit</strong> PHP wasm build (<code>PHP_INT_SIZE</code> is 4), so any JS number at
+or above 2^31 wraps silently on the way in. Measured: <code>Date.now()</code> arrived in PHP as
+<code>-397708726</code> instead of ~1.78e12. Two instances were found separately, a timestamp and a node
+id — and finding two separately means the class was still open.</p>
+<p>The obvious fix, stringifying anything unsafe, <strong>is lossy in the other direction.</strong> PHP receives
+<code>&quot;1780000000000&quot;</code> and cannot tell whether that was an integer too large to represent or a
+genuine string; sending it back produces a string where a number belongs, and the corruption
+reappears one hop later.</p>
+<p>So values that cannot cross natively are wrapped in a tagged envelope instead of flattened, and
+<code>decode()</code> is the exact inverse of <code>encode()</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Envelope</th>
+<th>Carries</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>{__t: 'i', v: '1780000000000'}</code></td>
+<td>integer outside 32-bit range</td>
+</tr>
+<tr>
+<td><code>{__t: 'n', v: '1.5e300'}</code></td>
+<td>non-finite or precision-risky float</td>
+</tr>
+<tr>
+<td><code>{__t: 'd', v: '1780000000000'}</code></td>
+<td><code>Date</code></td>
+</tr>
+<tr>
+<td><code>{__t: 'b', v: '&lt;base64&gt;'}</code></td>
+<td>bytes</td>
+</tr>
+<tr>
+<td><code>{__t: 'u'}</code></td>
+<td><code>undefined</code>, which PHP has no word for</td>
+</tr>
+</tbody>
+</table>
+<p>Anything representable on both sides crosses unwrapped, so the common path costs nothing.</p>
+<hr>
+<h2 id="🔗-bridge-contract" class="tsd-anchor-link">🔗 Bridge Contract<a href="#🔗-bridge-contract" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>Two entry points, and the second is the interesting one.</p>
+<pre><code class="ts"><span class="hl-0">execSql</span><span class="hl-1">(</span><span class="hl-3">sql</span><span class="hl-1">: </span><span class="hl-3">string</span><span class="hl-1">, </span><span class="hl-3">params</span><span class="hl-1">?: </span><span class="hl-3">SqlBindings</span><span class="hl-1">): </span><span class="hl-3">ExecSqlResult</span><br/><span class="hl-0">execTxn</span><span class="hl-1">(</span><span class="hl-3">req</span><span class="hl-1">: </span><span class="hl-3">TxnRequest</span><span class="hl-1">): </span><span class="hl-3">ExecTxnResult</span>
+</code><button type="button">Copy</button></pre>
+
+<p><code>execTxn</code> runs a list of statements inside one <code>ctx.storage.transactionSync()</code>, optionally with
+a trailing read. <code>commit: false</code> runs them, evaluates the read inside the same transaction, then
+throws a private sentinel so the runtime rolls back — and <strong>still returns the results</strong>, which
+is what makes a speculative row count and insert id possible.</p>
+<p><code>ExecTxnResult</code> is a discriminated union rather than one shape with optionals: a
+failed replay has already been rolled back, so there are no results to read, and the
+discriminant is what stops a caller reading them anyway.</p>
+<hr>
+<h2 id="🔧-api" class="tsd-anchor-link">🔧 API<a href="#🔧-api" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<table>
+<thead>
+<tr>
+<th>Export</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SiteDurableObject</code></td>
+<td>the Durable Object; <code>execSql</code>, <code>execTxn</code>, <code>installBridge</code>, <code>nowMs</code></td>
+</tr>
+<tr>
+<td><code>encode</code> / <code>decode</code></td>
+<td>the codec, exact inverses of each other</td>
+</tr>
+<tr>
+<td><code>codecGuard(host)</code></td>
+<td>wraps a host surface so every value crossing it is encoded</td>
+</tr>
+<tr>
+<td><code>PHP_CODEC</code></td>
+<td>the PHP half of the codec, as source, for hosts that evaluate it</td>
+</tr>
+<tr>
+<td><code>toPositional(sql, params)</code></td>
+<td>rewrites named parameters, because the engine has none</td>
+</tr>
+<tr>
+<td><code>bindable(value)</code></td>
+<td>the one value transform <code>sql.exec()</code> needs; a JS <code>BigInt</code> is refused</td>
+</tr>
+<tr>
+<td><code>UnreadableIntegerError</code></td>
+<td>a read above 2^53, refused rather than answered wrongly</td>
+</tr>
+<tr>
+<td><code>ExecSqlResult</code></td>
+<td><code>{ rows, rowsRead, rowsWritten, lastInsertRowid, changes }</code></td>
+</tr>
+<tr>
+<td><code>TxnRequest</code> / <code>TxnStatement</code> / <code>ExecTxnResult</code></td>
+<td>the replay contract above</td>
+</tr>
+<tr>
+<td><code>SqlBindings</code></td>
+<td><code>unknown[] | Record&lt;string, unknown&gt; | null</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="🧪-testing" class="tsd-anchor-link">🧪 Testing<a href="#🧪-testing" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<pre><code class="sh"><span class="hl-0">bun</span><span class="hl-1"> </span><span class="hl-2">run</span><span class="hl-1"> </span><span class="hl-2">typecheck</span><br/><span class="hl-0">bun</span><span class="hl-1"> </span><span class="hl-2">run</span><span class="hl-1"> </span><span class="hl-2">test</span><span class="hl-1"> </span><span class="hl-4"># 87 assertions across 3 specs</span><br/><span class="hl-0">bun</span><span class="hl-1"> </span><span class="hl-2">run</span><span class="hl-1"> </span><span class="hl-2">test:coverage</span>
+</code><button type="button">Copy</button></pre>
+
+<p><strong>87 passing, 0 failed</strong>, at a measured <strong>61.68% statements</strong> (<code>codec.ts</code> 82.29%, <code>do-sqlite.ts</code>
+49.69% — the Durable Object routes and <code>alarm()</code> need a real <code>ctx.storage.sql</code>, so they are covered
+in the consumer rather than here). The lane runs in <strong>node</strong>, not workerd, and coverage uses <code>provider: 'v8'</code>
+rather than <code>istanbul</code>. The sibling repositories split on exactly that axis: a workerd lane must use
+istanbul, because the v8 provider reads coverage off the Node inspector and attributes zero from
+inside the isolate; a node lane uses v8.</p>
+<p>Two rules the suite is built on:</p>
+<ul>
+<li><strong>The codec must round-trip.</strong> A codec that can decode a type it cannot encode is a bug to fix,
+not a test to skip.</li>
+<li><strong>Fail with a named refusal rather than truncating.</strong> A silently truncated value cannot be told
+apart from correct output until much later.</li>
+</ul>
+<hr>
+<h2 id="🔗-related-repositories" class="tsd-anchor-link">🔗 Related Repositories<a href="#🔗-related-repositories" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<table>
+<thead>
+<tr>
+<th>Repository</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/drupflare/worker"><code>drupflare/worker</code></a></td>
+<td>the consumer: Drupal 11 on Cloudflare Workers</td>
+</tr>
+<tr>
+<td><a href="https://github.com/drupflare/rom"><code>drupflare/rom</code></a></td>
+<td><code>composer require drupflare/rom:0.*</code> — the Drupal 11 driver that sits on top</td>
+</tr>
+<tr>
+<td><a href="https://github.com/drupflare/cartridge"><code>drupflare/cartridge</code></a></td>
+<td>the reentrancy gate and interrupt mask this package imports</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="📄-license" class="tsd-anchor-link">📄 License<a href="#📄-license" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
+<p>MIT (c) Gregory Mitchell 2026. See <a href="media/LICENSE">LICENSE</a>.</p>
+</div></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details"><a href="#🗄️-durabledb"><span>🗄️ durabledb</span></a>
+<ul>
+<li><a href="#📋-table-of-contents"><span>📋 <wbr/>Table of <wbr/>Contents</span></a></li>
+<li><a href="#🎯-why"><span>🎯 <wbr/>Why</span></a></li>
+<li><a href="#📥-install"><span>📥 <wbr/>Install</span></a></li>
+<li><a href="#🧱-limits"><span>🧱 <wbr/>Limits</span></a></li>
+<li><a href="#🔁-codec"><span>🔁 <wbr/>Codec</span></a></li>
+<li><a href="#🔗-bridge-contract"><span>🔗 <wbr/>Bridge <wbr/>Contract</span></a></li>
+<li><a href="#🔧-api"><span>🔧 <wbr/>API</span></a></li>
+<li><a href="#🧪-testing"><span>🧪 <wbr/>Testing</span></a></li>
+<li><a href="#🔗-related-repositories"><span>🔗 <wbr/>Related <wbr/>Repositories</span></a></li>
+<li><a href="#📄-license"><span>📄 <wbr/>License</span></a></li></ul></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="modules.html">@drupflare/durabledb - v0.1.0</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
+<div class="overlay"></div></body></html>
