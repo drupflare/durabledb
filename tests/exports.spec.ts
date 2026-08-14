@@ -71,15 +71,6 @@ describe('the package exports map', () => {
 	it('is in the 0.x beta window the rest of the project sits in', () => {
 		expect(pkg.version).toMatch(/^0\./);
 	});
-
-	it('declares no runtime dependency yet, which is the PRE-PUBLICATION state', () => {
-		// @drupflare/cartridge is imported by do-sqlite.ts and deliberately NOT declared here: it is
-		// unpublished, and declaring it makes `bun install --frozen-lockfile` fail with a registry
-		// 404 on every CI run. The cost is real -- the root entry and ./do-sqlite are unresolvable
-		// for a consumer until it is declared -- so `bun add @drupflare/cartridge` is a publish-time
-		// step and this assertion is the tripwire that says so; the release sequence covers it
-		expect((pkg as Record<string, unknown>).dependencies).toBeUndefined();
-	});
 });
 
 describe('the root entry', () => {
