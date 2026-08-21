@@ -1,6 +1,6 @@
 {
 	"name": "@drupflare/durabledb",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"type": "module",
 	"description": "A codec that encodes the real platform limits of Cloudflare Durable Object SQLite: 100 bound parameters, a 50-byte LIKE pattern, and lossy integers above 2^53.",
 	"license": "MIT",
@@ -30,7 +30,7 @@
 		"prepare": "husky"
 	},
 	"dependencies": {
-		"@drupflare/cartridge": "^0.1.2"
+		"@drupflare/cartridge": "^0.1.3"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^5.20260814.1",
