@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decode, encode } from '../src/codec.js';
+import { codecGuard, decode, encode } from '../src/codec.js';
 
 /**
  * Ported from `scripts/test-codec.mjs` (43 hand-rolled assertions).
@@ -61,9 +61,8 @@ describe('codec: the 32-bit regressions', () => {
 		expect(trip(value)).toEqual(value);
 	});
 
-	// THE CONTROL, and it is why this suite cannot pass vacuously. The old lossy behaviour
-	// stringified large integers; assert the current output is genuinely a number, so a
-	// regression to a string would fail here rather than be silently accepted
+	// the control: the old lossy behaviour stringified large integers, so asserting the output
+	// is genuinely a number is what stops a regression to a string passing here
 	it('a large int does NOT decode to a string, which was the old lossy behaviour', () => {
 		const got = trip(1780000000000);
 		expect(got).not.toBe(String(1780000000000));
@@ -145,5 +144,88 @@ describe('codec: refusals', () => {
 
 	it('refuses an unknown tag on the way in', () => {
 		expect(() => decode({ __t: 'zzz', v: 1 })).toThrow();
+	});
+});
+
+describe('codec: the depth guard, which is the cycle answer in both directions', () => {
+	/** builds `{a:{a:{...}}}` nested `depth` times */
+	const deep = (depth: number): unknown => {
+		let value: unknown = 1;
+		for (let i = 0; i < depth; i++) value = { a: value };
+		return value;
+	};
+
+	it('refuses to encode past 32 levels rather than recursing forever on a cycle', () => {
+		expect(() => encode(deep(40))).toThrow(RangeError);
+	});
+
+	it('refuses to DECODE past 32 levels too, which is the untrusted direction', () => {
+		// encode() is called on values this process built; decode() is called on whatever the
+		// interpreter sent, so this is the side an attacker reaches
+		expect(() => decode(deep(40))).toThrow(RangeError);
+	});
+
+	it('CONTROL: a structure inside the limit round-trips', () => {
+		expect(trip(deep(8))).toEqual(deep(8));
+	});
+});
+
+describe('codec: a plain float tag', () => {
+	it('decodes an ordinary decimal payload, not just the three special names', () => {
+		expect(decode({ __t: 'n', v: '1.5' })).toBe(1.5);
+	});
+});
+
+describe('codecGuard', () => {
+	/** the two host shapes a guarded surface has to carry: callables and plain values */
+	const guarded = () =>
+		codecGuard({
+			echo: (value: unknown) => value,
+			widen: (n: unknown) => (n as number) + 1,
+			later: async (value: unknown) => value,
+			version: 3,
+			banner: 'cfw'
+		});
+
+	it('decodes an argument on the way in and encodes the result on the way out', () => {
+		// the whole reason it is applied at the BOUNDARY: opt-in guarding is precisely how the
+		// first two 32-bit holes were missed
+		const host = guarded();
+		const call = host.echo as (...args: unknown[]) => unknown;
+		expect(call({ __t: 'i', v: '9007199254740993' })).toEqual({
+			__t: 'i',
+			v: '9007199254740993'
+		});
+	});
+
+	it('hands the callee a real value rather than an envelope', () => {
+		const host = guarded();
+		const call = host.widen as (...args: unknown[]) => unknown;
+		expect(call({ __t: 'n', v: '1.5' })).toBe(2.5);
+	});
+
+	it('awaits a promise-returning member and encodes what it resolves to', async () => {
+		// the argument arrives as an envelope because that is what the interpreter sends; the
+		// callee sees a real Date, and what comes back out is an envelope again
+		const host = guarded();
+		const call = host.later as (...args: unknown[]) => PromiseLike<unknown>;
+		const out = await call({ __t: 'd', v: '1780000000000' });
+		expect(out).toEqual({ __t: 'd', v: '1780000000000' });
+	});
+
+	it('encodes a non-callable member in place rather than dropping it', () => {
+		const host = guarded();
+		expect(host.version).toBe(3);
+		expect(host.banner).toBe('cfw');
+	});
+
+	it('carries every member across, so a guarded surface is not a narrower one', () => {
+		expect(Object.keys(guarded()).sort()).toEqual([
+			'banner',
+			'echo',
+			'later',
+			'version',
+			'widen'
+		]);
 	});
 });

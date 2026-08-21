@@ -1,8 +1,4 @@
-import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
-
-/** resolves a path inside the sibling cartridge working copy */
-const sibling = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
 export default defineConfig({
 	test: {

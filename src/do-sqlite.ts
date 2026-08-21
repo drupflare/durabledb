@@ -93,7 +93,7 @@ export type SqlBindings = unknown[] | Record<string, unknown> | null;
 /**
  * Durable Object that owns one site: the PHP interpreter and the database.
  *
- * WHY THIS IS THE BLOCKER: until now the database lived in MEMFS. MEMFS is
+ * The blocker this closes: until now the database lived in MEMFS. MEMFS is
  * isolate-local and ephemeral, so every write -- a new node, a user, a cache
  * entry, a config change -- is lost when the isolate dies. That is not a
  * performance characteristic, it is "the site does not persist".
@@ -365,14 +365,8 @@ export class SiteDurableObject {
 						);
 					}
 				}
-				// Same-event transaction, and the DO-native mechanism.
-				//
-				// The cross-request BEGIN/ROLLBACK test failed, and the reason matters:
-				// DO SQLite commits its implicit transaction at the END OF EACH EVENT,
-				// so a BEGIN in one fetch() is already committed before the ROLLBACK
-				// arrives in the next. Drupal's transactions all live inside one
-				// request, which -- because PHP runs inside the DO -- is one event, so
-				// this is the shape that actually needs to work.
+				// DO SQLite commits its implicit transaction at the end of each event, so a
+				// cross-request BEGIN is committed before the next fetch()'s ROLLBACK arrives
 				case '/__txn': {
 					const body = await request.json<{ mode?: string }>();
 					const before = this.sql

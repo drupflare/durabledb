@@ -3,11 +3,13 @@ import pkg from '../package.json';
 import * as codecModule from '../src/codec.js';
 import * as doSqliteModule from '../src/do-sqlite.js';
 import * as indexModule from '../src/index.js';
+import tsconfigSource from '../tsconfig.json?raw';
+import vitestSource from '../vitest.config.ts?raw';
 
 /**
  * The subpath map, checked against the modules it names.
  *
- * WHY THIS IS A TEST AND NOT A REVIEW ITEM. An `exports` map is the one part of a package that
+ * A test and not a review item, because an `exports` map is the one part of a package that
  * nothing else in the repository reads: `tsc` resolves relative specifiers, vitest resolves
  * relative specifiers, and the map is only exercised the first time a CONSUMER installs the
  * package. So a typo in it is invisible until publication, which is the worst possible moment.
@@ -56,11 +58,8 @@ describe('the package exports map', () => {
 	});
 
 	it('declares NO side effect, which is a claim about every module and not a default', () => {
-		// `false` says a bundler may drop any of these modules whole when nothing imports from it.
-		// That is true here: module scope is class, function and const declarations only, and
-		// PHP_CODEC is a String.raw literal. It is NOT the answer everywhere -- cartridge has to
-		// write an ARRAY naming its worker shim, because dropping that module deletes a globalThis
-		// patch. Re-check this if anything in src/ ever runs at import time
+		// true here because module scope is declarations only and PHP_CODEC is a String.raw
+		// literal; cartridge needs an array instead, since dropping its shim deletes a patch
 		expect(pkg.sideEffects).toBe(false);
 	});
 
@@ -70,6 +69,36 @@ describe('the package exports map', () => {
 
 	it('is in the 0.x beta window the rest of the project sits in', () => {
 		expect(pkg.version).toMatch(/^0\./);
+	});
+});
+
+describe('how @drupflare/cartridge resolves', () => {
+	/**
+	 * One resolution, in every environment; this spec exists because there were two.
+	 *
+	 * `tsconfig.json` carried a `paths` entry aimed at `../cartridge/src`, so `bun run typecheck`
+	 * read the sibling working copy while `bun run test` read the installed tarball. Measured by
+	 * renaming `Gate` in the sibling: the typecheck failed with TS2305 and all 122 tests passed.
+	 * In CI the sibling does not exist, so the mapping fell through to node_modules and the two
+	 * lanes agreed again -- which made the divergence a property of the machine rather than of
+	 * the code.
+	 *
+	 * The version range plus renovate is the drift mechanism now: a cartridge release produces a
+	 * bump PR and this repo's gate runs against the new version before it merges.
+	 */
+	it('is a real dependency with a range, not a path mapping', () => {
+		expect((pkg.dependencies as Record<string, string>)['@drupflare/cartridge']).toMatch(
+			/^\^?0\./
+		);
+	});
+
+	it('is aliased by no build config, so every lane reads node_modules', () => {
+		expect(tsconfigSource).not.toContain('"paths"');
+		expect(tsconfigSource).not.toContain('../cartridge');
+		// vitest resolves it the same way; an alias here would put the runtime lane back on a
+		// different copy than the typecheck lane
+		expect(vitestSource).not.toContain('../cartridge');
+		expect(vitestSource).not.toContain('alias');
 	});
 });
 
