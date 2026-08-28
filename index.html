@@ -17,8 +17,8 @@
 <a href="https://codecov.io/gh/drupflare/durabledb"><img src="https://codecov.io/gh/drupflare/durabledb/branch/master/graph/badge.svg" alt="codecov"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a></p>
 <p><strong>A <code>ctx.storage.sql</code> host and a value codec that encode what the platform actually does, not
-what SQLite documents.</strong> <code>ctx.storage.sql</code> caps a statement at <strong>100</strong> bound parameters where
-local PDO allows 32,766, refuses a <code>LIKE</code> pattern over <strong>50 bytes</strong>, has <strong>no named parameters
+what SQLite documents.</strong> <code>ctx.storage.sql</code> caps a statement at 100 bound parameters where
+local PDO allows 32,766, refuses a <code>LIKE</code> pattern over 50 bytes, has <strong>no named parameters
 at all</strong>, and reads integers above <strong>2^53</strong> lossily. Every one of those is a measured refusal
 from a deployed object, and every one has produced a defect that a local SQLite passed.</p>
 <hr>
