@@ -8,8 +8,8 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **A `ctx.storage.sql` host and a value codec that encode what the platform actually does, not
-what SQLite documents.** `ctx.storage.sql` caps a statement at **100** bound parameters where
-local PDO allows 32,766, refuses a `LIKE` pattern over **50 bytes**, has **no named parameters
+what SQLite documents.** `ctx.storage.sql` caps a statement at 100 bound parameters where
+local PDO allows 32,766, refuses a `LIKE` pattern over 50 bytes, has **no named parameters
 at all**, and reads integers above **2^53** lossily. Every one of those is a measured refusal
 from a deployed object, and every one has produced a defect that a local SQLite passed.
 
