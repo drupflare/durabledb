@@ -7,8 +7,8 @@ Drupal 11 database driver, but nothing here is Drupal-specific.
 ## Status
 
 **Published** at `@drupflare/durabledb@0.1.3`, and **green**. `bun run typecheck` is clean and the
-suite reports **87 assertions passing** at a measured **61.68% statements**. The release sequence is
-maintainer-only.
+suite reports **124 assertions passing** at a measured **99.61% of statements**, 94.24% of branches.
+The release sequence is maintainer-only.
 
 **`release.yml` publishes to npm and to GitHub Packages, and the GitHub half used to fail silently.**
 `setup-node` writes ONE host-scoped credential line, `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}`,
@@ -34,25 +34,18 @@ import { withMask } from '@drupflare/cartridge/mask';
 root pulls `lazy-fs.ts`, which imports `fflate`, and `fflate` is not a dependency here. `./gate`
 (`serialize.ts`) and `./mask` (`mask.ts`) import nothing at all.
 
-**The dependency still resolves through an alias rather than from npm, and it no longer has to.**
-`@drupflare/cartridge` published at `0.1.3` on 2026-08-29; resolution here is still two `paths`
-entries in `tsconfig.json` and two matching `resolve.alias` entries in `vitest.config.ts`, pointing at
-a sibling working copy. Both files carry the reason inline. **This is now an open action, not a wait**
--- see the migration step at the end of this section.
+**The dependency comes from npm, and the path mappings that used to supply it are gone.**
+`package.json` declares `"@drupflare/cartridge": "^0.2.0"` under `dependencies`; `tsconfig.json` has no
+`paths` and `vitest.config.ts` has no `resolve.alias`. Two specs in `tests/exports.spec.ts` hold that
+down -- one that the range is real, one that neither build config mentions `../cartridge` -- so this
+does not need re-deriving from the files.
 
-**`package.json` declares NO `dependencies` at all, and an earlier version of this file said it
-declared `"@drupflare/cartridge": "0.x"`. It does not.** Declaring an unpublished package makes
-`bun install --frozen-lockfile` fail with a registry 404, which is every CI run. The cost of leaving it
-out is real and has to be paid at publish time rather than ignored: a consumer that installs this
-package today and imports the root entry or `./do-sqlite` gets an unresolvable specifier. So the
-declaration is a publish-time step, `tests/exports.spec.ts` asserts the field is absent as the tripwire
-that says so, and `0.x` (npm: any `0.y.z`, unlike a caret, which pins the minor) is the range to write
-when the time comes.
-
-**Cartridge has published, so this is due: `bun add @drupflare/cartridge`, then DELETE both sets.** An
-alias silently wins over `node_modules`, so a stale one leaves this repo typechecked and tested against
-whatever happens to be in a sibling directory. The check is
-`grep -rn "cartridge/src" tsconfig.json vitest.config.ts` returning nothing.
+**Why it is pinned rather than left to convention: an alias silently wins over `node_modules`.** A
+stale one leaves this repo typechecked and tested against whatever happens to be in a sibling
+directory, and in CI, where the sibling does not exist, the mapping falls through and the two lanes
+agree again -- which makes the divergence a property of the machine rather than of the code. The
+version range plus renovate is the drift mechanism now: a cartridge release opens a bump PR and this
+repo's gate runs against the new version before it merges.
 
 `codec.ts` and `do-sqlite.ts` also still exist in `drupflare/worker`, with **no sync check between
 the two copies**. In the parent project that exact shape of duplication went silently stale twice.
