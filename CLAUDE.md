@@ -6,10 +6,20 @@ Drupal 11 database driver, but nothing here is Drupal-specific.
 
 ## Status
 
-Publish-ready, not published, and **green**. `bun run typecheck` is clean and the suite reports **87
-assertions passing** at a measured **61.68% statements**. The release sequence is maintainer-only, and
-it does not start here: **cartridge has to be on npm first**, because until it is this package cannot
-declare the dependency it imports.
+**Published** at `@drupflare/durabledb@0.1.3`, and **green**. `bun run typecheck` is clean and the
+suite reports **87 assertions passing** at a measured **61.68% statements**. The release sequence is
+maintainer-only.
+
+**`release.yml` publishes to npm and to GitHub Packages, and the GitHub half used to fail silently.**
+`setup-node` writes ONE host-scoped credential line, `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}`,
+and npm matches `_authToken` by registry host. So `npm publish --registry https://npm.pkg.github.com`
+carried no credential no matter what `NODE_AUTH_TOKEN` was set to in that step's `env`, and the result
+was swallowed by a `||` that reported every failure as "most likely already present" and exited 0.
+There is now a second `setup-node` with `registry-url: https://npm.pkg.github.com` and
+`scope: '@drupflare'`, an existence check symmetric with the npm one, and a bare `npm publish` that is
+allowed to fail the job. **Never route a publish at another registry with `--registry` alone**; give
+that host its own `setup-node`, and never wrap a publish in `||`. `drupflare/cartridge` carries the
+same fix.
 
 The old blocker is closed. `src/do-sqlite.ts:1-2` used to import a bare `cartridge` specifier that
 resolved to nothing, which cost 2 `TS2307` errors and blocked the whole `do-sqlite` spec. It now
@@ -24,10 +34,11 @@ import { withMask } from '@drupflare/cartridge/mask';
 root pulls `lazy-fs.ts`, which imports `fflate`, and `fflate` is not a dependency here. `./gate`
 (`serialize.ts`) and `./mask` (`mask.ts`) import nothing at all.
 
-**The dependency resolves through an alias, not from npm, and that is temporary.**
-`@drupflare/cartridge` is publish-ready at `0.1.0` but unpublished, so resolution comes from two
-`paths` entries in `tsconfig.json` and two matching `resolve.alias` entries in `vitest.config.ts`.
-Both files carry the reason inline.
+**The dependency still resolves through an alias rather than from npm, and it no longer has to.**
+`@drupflare/cartridge` published at `0.1.3` on 2026-08-29; resolution here is still two `paths`
+entries in `tsconfig.json` and two matching `resolve.alias` entries in `vitest.config.ts`, pointing at
+a sibling working copy. Both files carry the reason inline. **This is now an open action, not a wait**
+-- see the migration step at the end of this section.
 
 **`package.json` declares NO `dependencies` at all, and an earlier version of this file said it
 declared `"@drupflare/cartridge": "0.x"`. It does not.** Declaring an unpublished package makes
@@ -38,9 +49,9 @@ declaration is a publish-time step, `tests/exports.spec.ts` asserts the field is
 that says so, and `0.x` (npm: any `0.y.z`, unlike a caret, which pins the minor) is the range to write
 when the time comes.
 
-**When cartridge publishes: `bun add @drupflare/cartridge`, then DELETE both sets.** An alias silently
-wins over `node_modules`, so a stale one leaves this repo typechecked and tested against whatever
-happens to be in a sibling directory. The check is
+**Cartridge has published, so this is due: `bun add @drupflare/cartridge`, then DELETE both sets.** An
+alias silently wins over `node_modules`, so a stale one leaves this repo typechecked and tested against
+whatever happens to be in a sibling directory. The check is
 `grep -rn "cartridge/src" tsconfig.json vitest.config.ts` returning nothing.
 
 `codec.ts` and `do-sqlite.ts` also still exist in `drupflare/worker`, with **no sync check between
