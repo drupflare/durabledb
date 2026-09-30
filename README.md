@@ -36,7 +36,7 @@ in the same isolate as the code, and synchronous to read so blocking callers com
 Then you write against it as though it were SQLite and it refuses things SQLite does not.
 
 The refusals are not documented as a set, they are not tunable, and each one fails in a
-different register — a thrown error for the parameter cap, a **silently wrong number** for a
+different register: a thrown error for the parameter cap, a **silently wrong number** for a
 wide integer. A value that comes back wrong rather than erroring cannot be told apart from correct
 output until much later.
 
@@ -82,7 +82,7 @@ Two carry a further consequence:
 
 **Writing a wide integer is exact; reading one is not.** `ctx.storage.sql` hands INTEGER columns
 back as JS doubles, so the precision is gone before any consumer can see it. `CAST(col AS TEXT)`
-returns every digit, so the storage is fine — the loss is in the cursor. `UnreadableIntegerError`
+returns every digit, so the storage is fine; the loss is in the cursor. `UnreadableIntegerError`
 exists to make that a refusal rather than a wrong answer.
 
 **"There is no smaller unit than a row" is false**, and it was this project's own unverified
@@ -101,7 +101,7 @@ indivisible; SQLite builds a value across statements with `col = col || ?`.
 The consumer runtime is a **32-bit** PHP wasm build (`PHP_INT_SIZE` is 4), so any JS number at
 or above 2^31 wraps silently on the way in. Measured: `Date.now()` arrived in PHP as
 `-397708726` instead of ~1.78e12. Two instances were found separately, a timestamp and a node
-id — and finding two separately means the class was still open.
+id, and finding two separately means the class was still open.
 
 The obvious fix, stringifying anything unsafe, **is lossy in the other direction.** PHP receives
 `"1780000000000"` and cannot tell whether that was an integer too large to represent or a
@@ -134,7 +134,7 @@ execTxn(req: TxnRequest): ExecTxnResult
 
 `execTxn` runs a list of statements inside one `ctx.storage.transactionSync()`, optionally with
 a trailing read. `commit: false` runs them, evaluates the read inside the same transaction, then
-throws a private sentinel so the runtime rolls back — and **still returns the results**, which
+throws a private sentinel so the runtime rolls back, and **still returns the results**, which
 is what makes a speculative row count and insert id possible.
 
 `ExecTxnResult` is a discriminated union rather than one shape with optionals: a
@@ -169,7 +169,7 @@ bun run test:coverage
 ```
 
 **87 passing, 0 failed**, at a measured **61.68% statements** (`codec.ts` 82.29%, `do-sqlite.ts`
-49.69% — the Durable Object routes and `alarm()` need a real `ctx.storage.sql`, so they are covered
+49.69%: the Durable Object routes and `alarm()` need a real `ctx.storage.sql`, so they are covered
 in the consumer rather than here). The lane runs in **node**, not workerd, and coverage uses `provider: 'v8'`
 rather than `istanbul`. The sibling repositories split on exactly that axis: a workerd lane must use
 istanbul, because the v8 provider reads coverage off the Node inspector and attributes zero from
@@ -186,11 +186,11 @@ Two rules the suite is built on:
 
 ## 🔗 Related Repositories
 
-| Repository                                                      | What it is                                                                   |
-| --------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| [`drupflare/worker`](https://github.com/drupflare/worker)       | the consumer: Drupal 11 on Cloudflare Workers                                |
-| [`drupflare/rom`](https://github.com/drupflare/rom)             | `composer require drupflare/rom:0.*` — the Drupal 11 driver that sits on top |
-| [`drupflare/cartridge`](https://github.com/drupflare/cartridge) | the reentrancy gate and interrupt mask this package imports                  |
+| Repository                                                      | What it is                                                                  |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [`drupflare/worker`](https://github.com/drupflare/worker)       | the consumer: Drupal 11 on Cloudflare Workers                               |
+| [`drupflare/rom`](https://github.com/drupflare/rom)             | `composer require drupflare/rom:0.*`, the Drupal 11 driver that sits on top |
+| [`drupflare/cartridge`](https://github.com/drupflare/cartridge) | the reentrancy gate and interrupt mask this package imports                 |
 
 ---
 
