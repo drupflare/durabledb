@@ -40,7 +40,7 @@ from a deployed object, and every one has produced a defect that a local SQLite 
 in the same isolate as the code, and synchronous to read so blocking callers compose with it.
 Then you write against it as though it were SQLite and it refuses things SQLite does not.</p>
 <p>The refusals are not documented as a set, they are not tunable, and each one fails in a
-different register — a thrown error for the parameter cap, a <strong>silently wrong number</strong> for a
+different register: a thrown error for the parameter cap, a <strong>silently wrong number</strong> for a
 wide integer. A value that comes back wrong rather than erroring cannot be told apart from correct
 output until much later.</p>
 <p>So the limits live in code, as named constants and named refusals, with a test per limit.</p>
@@ -127,7 +127,7 @@ resolver.</p>
 <p>Two carry a further consequence:</p>
 <p><strong>Writing a wide integer is exact; reading one is not.</strong> <code>ctx.storage.sql</code> hands INTEGER columns
 back as JS doubles, so the precision is gone before any consumer can see it. <code>CAST(col AS TEXT)</code>
-returns every digit, so the storage is fine — the loss is in the cursor. <code>UnreadableIntegerError</code>
+returns every digit, so the storage is fine; the loss is in the cursor. <code>UnreadableIntegerError</code>
 exists to make that a refusal rather than a wrong answer.</p>
 <p><strong>&quot;There is no smaller unit than a row&quot; is false</strong>, and it was this project's own unverified
 claim, believed for a while. Three 520 KB rows each overran the record cap and looked
@@ -142,7 +142,7 @@ worker and say so. Do not relax a guard.</p>
 <p>The consumer runtime is a <strong>32-bit</strong> PHP wasm build (<code>PHP_INT_SIZE</code> is 4), so any JS number at
 or above 2^31 wraps silently on the way in. Measured: <code>Date.now()</code> arrived in PHP as
 <code>-397708726</code> instead of ~1.78e12. Two instances were found separately, a timestamp and a node
-id — and finding two separately means the class was still open.</p>
+id, and finding two separately means the class was still open.</p>
 <p>The obvious fix, stringifying anything unsafe, <strong>is lossy in the other direction.</strong> PHP receives
 <code>&quot;1780000000000&quot;</code> and cannot tell whether that was an integer too large to represent or a
 genuine string; sending it back produces a string where a number belongs, and the corruption
@@ -188,7 +188,7 @@ reappears one hop later.</p>
 
 <p><code>execTxn</code> runs a list of statements inside one <code>ctx.storage.transactionSync()</code>, optionally with
 a trailing read. <code>commit: false</code> runs them, evaluates the read inside the same transaction, then
-throws a private sentinel so the runtime rolls back — and <strong>still returns the results</strong>, which
+throws a private sentinel so the runtime rolls back, and <strong>still returns the results</strong>, which
 is what makes a speculative row count and insert id possible.</p>
 <p><code>ExecTxnResult</code> is a discriminated union rather than one shape with optionals: a
 failed replay has already been rolled back, so there are no results to read, and the
@@ -251,7 +251,7 @@ discriminant is what stops a caller reading them anyway.</p>
 </code><button type="button">Copy</button></pre>
 
 <p><strong>87 passing, 0 failed</strong>, at a measured <strong>61.68% statements</strong> (<code>codec.ts</code> 82.29%, <code>do-sqlite.ts</code>
-49.69% — the Durable Object routes and <code>alarm()</code> need a real <code>ctx.storage.sql</code>, so they are covered
+49.69%: the Durable Object routes and <code>alarm()</code> need a real <code>ctx.storage.sql</code>, so they are covered
 in the consumer rather than here). The lane runs in <strong>node</strong>, not workerd, and coverage uses <code>provider: 'v8'</code>
 rather than <code>istanbul</code>. The sibling repositories split on exactly that axis: a workerd lane must use
 istanbul, because the v8 provider reads coverage off the Node inspector and attributes zero from
@@ -279,7 +279,7 @@ apart from correct output until much later.</li>
 </tr>
 <tr>
 <td><a href="https://github.com/drupflare/rom"><code>drupflare/rom</code></a></td>
-<td><code>composer require drupflare/rom:0.*</code> — the Drupal 11 driver that sits on top</td>
+<td><code>composer require drupflare/rom:0.*</code>, the Drupal 11 driver that sits on top</td>
 </tr>
 <tr>
 <td><a href="https://github.com/drupflare/cartridge"><code>drupflare/cartridge</code></a></td>
