@@ -5,7 +5,7 @@
     "": {
       "name": "@drupflare/durabledb",
       "dependencies": {
-        "@drupflare/cartridge": "^0.2.0",
+        "@drupflare/cartridge": "^0.2.0 || ^0.3.0",
       },
       "devDependencies": {
         "@cloudflare/workers-types": "^5.20260829.1",
@@ -34,7 +34,7 @@
 
     "@cloudflare/workers-types": ["@cloudflare/workers-types@5.20260829.1", "", {}, "sha512-SsH4G9+JePvrBmz+b5Dl67LQ9w2/ycoIpAPcAkfg2aEs2SEisQHk7/AY0TymSXEBbDbWgcBqoLe4hNcuY3CxWA=="],
 
-    "@drupflare/cartridge": ["@drupflare/cartridge@0.2.0", "", { "dependencies": { "fflate": "^0.8.3", "fzstd": "^0.1.1" } }, "sha512-W92yDLlzPGudvAZgZrZzlY5M8GBckCMU27k7VHBfXpvr2AZxEqGwilABoy3AMlsDbEMUPbGuchYF2ifnZtXM1w=="],
+    "@drupflare/cartridge": ["@drupflare/cartridge@0.3.1", "", { "dependencies": { "fflate": "^0.8.3", "fzstd": "^0.1.1" } }, "sha512-lU7Xh5xmUmTet8m3iK9os51k6WDfoWZ7O+J+8igwZ3sFw399hjRkK4txdCLRk6zOEVlKeRltKKlfIVQ2tlSmQw=="],
 
     "@gerrit0/mini-shiki": ["@gerrit0/mini-shiki@3.23.0", "", { "dependencies": { "@shikijs/engine-oniguruma": "^3.23.0", "@shikijs/langs": "^3.23.0", "@shikijs/themes": "^3.23.0", "@shikijs/types": "^3.23.0", "@shikijs/vscode-textmate": "^10.0.2" } }, "sha512-bEMORlG0cqdjVyCEuU0cDQbORWX+kYCeo0kV1lbxF5bt4r7SID2l9bqsxJEM0zndaxpOUT7riCyIVEuqq/Ynxg=="],
 
